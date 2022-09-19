@@ -1,6 +1,7 @@
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -19,10 +20,14 @@ public class NettyServer {
         NioEventLoopGroup workerGroup = new NioEventLoopGroup();
         serverBootstrap.group(bossGroup, workerGroup)
                 .channel(NioServerSocketChannel.class) // 指定服务端的io模型为nio
+                .option(ChannelOption.SO_BACKLOG, 1024)
+                .childOption(ChannelOption.SO_KEEPALIVE, true)
+                .childOption(ChannelOption.TCP_NODELAY, true)
                 .childHandler(new ChannelInitializer<NioSocketChannel>() {
                     @Override
                     protected void initChannel(NioSocketChannel ch) {
                         System.out.println("服务端启动中");
+                        ch.pipeline().addLast(new FirstServerHandler());
                     }
                 });
         // 备注，windows系统似乎端口都是空闲的，故第一次就成功了
